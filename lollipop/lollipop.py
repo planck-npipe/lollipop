@@ -61,13 +61,13 @@ class lowlB(_InstallableLikelihood):
         
         #Fiducial spectrum
         self.log.debug("Reading model")
-        filepath = os.path.join(self.data_folder,self.modelfile)
+        filepath = os.path.join(self.data_folder,self.fiducialfile)
         clsim = fits.getdata(filepath)
         fid = binc.bin_spectra( clsims)
         
         #covmat
         self.log.debug("Reading covariance")
-        filepath = os.path.join(self.data_folder,self.covfile)
+        filepath = os.path.join(self.data_folder,self.clcovfile)
         clcov = self._read_dl_data(filepath)
         self.invcov = linalg.inv(clcov)
         
@@ -139,13 +139,13 @@ class lowlEB(_InstallableLikelihood):
         
         #Fiducial spectrum
         self.log.debug("Reading model")
-        filepath = os.path.join(self.data_folder,self.modelfile)
+        filepath = os.path.join(self.data_folder,self.fiducialfile)
         clsim = fits.getdata(filepath)
         fid = binc.bin_spectra( clsims)
         
         #covmat
         self.log.debug("Reading covariance")
-        filepath = os.path.join(self.data_folder,self.covfile)
+        filepath = os.path.join(self.data_folder,self.clcovfile)
         clcov = self._read_dl_data(filepath)
         if self.rcond != 0.:
             self.invcov = linalg.pinv(covariance,rcond)

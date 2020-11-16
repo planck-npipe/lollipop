@@ -1,0 +1,5 @@
+fsky: 0.52
+Bintab: /sps/planck/Users/tristram/Planck/NPIPE/lik/lol_binning_NPIPE.dat
+clfile: /sps/planck/Users/tristram/Planck/NPIPE/lik/cl_lolEB_NPIPE.dat
+fiducialfile: /sps/planck/Users/tristram/Planck/NPIPE/lik/fiducial_lolEB_ffp10_tensor_lensedCls.dat
+clcovfile: /sps/planck/Users/tristram/Planck/NPIPE/lik/clcov_lolEB_NPIPE.fits
