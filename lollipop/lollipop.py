@@ -40,7 +40,7 @@ class lowlB(_InstallableLikelihood):
             getattr(self, "path", None) or os.path.join(self.packages_path, "data")
         )
         
-        self.data_folder = os.path.join(data_file_path, self.data_folder)
+        self.data_folder = os.path.join(data_file_path)
         if not os.path.exists(self.data_folder):
             raise LoggedError(
                 self.log,
@@ -52,43 +52,58 @@ class lowlB(_InstallableLikelihood):
         fsky = 0.52
         
         #Binning (fixed binning)
-        binc = tools.get_binning()
+        self.binc = tools.get_binning()
         
         #Data
         self.log.debug("Reading cross-spectrum")
         filepath = os.path.join(self.data_folder,self.clfile)
-        data = fits.getdata(filepath)
-        datab = binc.bin_spectra( data)
+        data = tools.read_dl(filepath)
+        cldata = self.binc.bin_spectra(data)
         
         #Fiducial spectrum
         self.log.debug("Reading model")
         filepath = os.path.join(self.data_folder,self.fiducialfile)
-        clsim = fits.getdata(filepath)
-        fid = binc.bin_spectra( clsims)
+        data = tools.read_dl(filepath)
+        clfid = self.binc.bin_spectra(data)
         
         #covmat
         self.log.debug("Reading covariance")
         filepath = os.path.join(self.data_folder,self.clcovfile)
-        clcov = self._read_dl_data(filepath)
-        self.invcov = np.linalg.inv(clcov)
+        clcov = fits.getdata(filepath)
+        cbcov = tools.bin_covB( clcov, self.binc)
+        self.invcov = np.linalg.inv(cbcov)
         
         #compute offsets
-        off = tools.compute_offsets( binc.lbin, diag(clcov).reshape(-1,binc.nbins), fid, fsky=fsky)
+        self.log.debug("Compute offsets")
+        cloff = tools.compute_offsets( self.binc.lbin, np.diag(cbcov), clfid[2], fsky=fsky)
         
         #construct BB likelihood
-        self.data = datab[2]
-        self.off = off[2]
-        self.fid = fid[2]
+        self.data = cldata[2]
+        self.off  = cloff[2]
+        self.fid  = clfid[2]
         
-    def compute_likelihood( self, cl):
+    def _compute_likelihood( self, cl):
+        from numpy import dot, sign, sqrt
+        
         x = (self.data+self.off)/(cl+self.off)
         g = sign(x)*tools.ghl( abs(x))
         
         X = (sqrt(self.fid+self.off)) * g * (sqrt(self.fid+self.off))
         
-        chi2 = self.np.dot( X.transpose(),self.np.dot(self.invcov, X))
+        chi2 = dot( X.transpose(),dot(self.invcov, X))
         
         return( chi2)
+
+    def get_requirements(self):
+        return dict(Cl={mode: self.binc.lmax for mode in ["bb"]})
+
+    def logp(self, **params_values):
+        cl = self.theory.get_Cl(ell_factor=False)
+        return self.loglike(cl, **params_values)
+
+    def loglike(self, cl, **params_values):
+        model = self.binc.bin_spectra( cl["bb"])
+        return self._compute_likelihood(model)
 
 
 
@@ -117,7 +132,7 @@ class lowlEB(_InstallableLikelihood):
             getattr(self, "path", None) or os.path.join(self.packages_path, "data")
         )
 
-        self.data_folder = os.path.join(data_file_path, self.data_folder)
+        self.data_folder = os.path.join(data_file_path)
         if not os.path.exists(self.data_folder):
             raise LoggedError(
                 self.log,
@@ -127,47 +142,52 @@ class lowlEB(_InstallableLikelihood):
 
 #        self._fsky = fsky
         fsky = 0.5
+        rcond=1e-9
         
         #Binning (fixed binning)
-        binc = tools.get_binning()
+        self.binc = tools.get_binning()
         
         #Data
         self.log.debug("Reading cross-spectrum")
         filepath = os.path.join(self.data_folder,self.clfile)
-        data = fits.getdata(filepath)
-        datab = binc.bin_spectra( data)
+        data = tools.read_dl(filepath)
+        cldata = self.binc.bin_spectra( data)
         
         #Fiducial spectrum
         self.log.debug("Reading model")
         filepath = os.path.join(self.data_folder,self.fiducialfile)
-        clsim = fits.getdata(filepath)
-        fid = binc.bin_spectra( clsims)
+        data = tools.read_dl(filepath)
+        clfid = self.binc.bin_spectra( data)
         
         #covmat
         self.log.debug("Reading covariance")
         filepath = os.path.join(self.data_folder,self.clcovfile)
-        clcov = self._read_dl_data(filepath)
-        if self.rcond != 0.:
-            self.invcov = np.linalg.pinv(covariance,rcond)
+        clcov = fits.getdata(filepath)
+        cbcov = tools.bin_covEB( clcov, self.binc)
+        if rcond != 0.:
+            self.invcov = np.linalg.pinv(cbcov,rcond)
         else:
-            self.invcov = np.linalg.inv(covariance)
+            self.invcov = np.linalg.inv(cbcov)
         
         #compute offsets
-        off = tools.compute_offsets( binc.lbin, diag(clcov).reshape(-1,binc.nbins), fid, fsky=fsky)
-        off[3:] = 0. #force NO offsets for TE,TB, EB
+        self.log.debug("Compute offsets")
+        cloff = tools.compute_offsets( self.binc.lbin, np.diag(cbcov).reshape(-1,self.binc.nbins), clfid, fsky=fsky)
+        cloff[3:] = 0. #force NO offsets for TE,TB, EB
         
         #construct likelihood
         self.isEB = True
-        self.rcond=1e-9
-        self.data = datab
-        self.off = off
-        self.fid = fid
+        self.data = cldata
+        self.off = cloff
+        self.fid = clfid
         
-    def compute_likelihood( self, cl):
+    def _compute_likelihood( self, cl):
+        from numpy import dot, diag, sqrt, sign
+        from numpy.linalg import eigh
+        
         nel = len(self.data[0])
         ndim = 3 if self.isEB else 2
         
-        x = zeros( (ndim, nel))
+        x = np.zeros( (ndim, nel))
         for l in range(nel):
             O = tools.vec2mat(  self.off[:,l])
             D = tools.vec2mat( self.data[:,l]) + O
@@ -199,3 +219,18 @@ class lowlEB(_InstallableLikelihood):
         chi2 = dot( x, dot( self.invcov, x))
         
         return( chi2)
+
+    def get_requirements(self):
+        return dict(Cl={mode: self.binc.lmax for mode in ["tt", "ee", "bb", "te"]})
+
+    def logp(self, **params_values):
+        cl = self.theory.get_Cl(ell_factor=False)
+        return self.loglike(cl, **params_values)
+
+    def loglike(self, cl, **params_values):
+        clth = []
+        for mode in ["tt", "ee", "bb", "te"]:
+            clth += [cl[mode]]
+        model = self.binc.bin_spectra( clth)
+        return self._compute_likelihood(model)
+

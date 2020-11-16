@@ -88,4 +88,7 @@ class Bins(object):
         _p, _q = self._bin_operators()
         return np.dot(spectra[..., :minlmax+1], _p.T[:minlmax+1,...]) #* fact_binned
 
+    def bin_covariance( self, clcov):
+        p,q = self._bin_operators(cov=True)
+        return( np.matmul( p, np.matmul( clcov, q)))
 
