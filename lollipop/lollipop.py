@@ -2,17 +2,19 @@
 # LOLLIPOP
 #
 # Oct 2020   - M. Tristram -
-import numpy as np
-from numpy import linalg
-import astropy.io.fits as fits
+import os
+from typing import Optional
 
-from bins import Bins
-import tools
+import numpy as np
+import astropy.io.fits as fits
 
 from cobaya.conventions import _packages_path
 from cobaya.likelihoods._base_classes import _InstallableLikelihood
 from cobaya.log import LoggedError
 from cobaya.tools import are_different_params_lists
+
+from lollipop.bins import Bins
+from lollipop import tools
 
 
 class lowlB(_InstallableLikelihood):
@@ -21,10 +23,10 @@ class lowlB(_InstallableLikelihood):
     Spectra-based likelihood based on Hamimeche&Lewis for cross-spectra
     applied on CMB component separated map
     """
-
+    
     def initialize( self):
         self.log.info("Initialising.")
-
+        
         # Set path to data
         if (not getattr(self, "path", None)) and (not getattr(self, _packages_path, None)):
             raise LoggedError(
@@ -33,7 +35,7 @@ class lowlB(_InstallableLikelihood):
                 "'path' or the common property '%s'.",
                 _packages_path,
             )
-
+        
         # If no path specified, use the modules path
         data_file_path = os.path.normpath(
             getattr(self, "path", None) or os.path.join(self.packages_path, "data")
@@ -69,7 +71,7 @@ class lowlB(_InstallableLikelihood):
         self.log.debug("Reading covariance")
         filepath = os.path.join(self.data_folder,self.clcovfile)
         clcov = self._read_dl_data(filepath)
-        self.invcov = linalg.inv(clcov)
+        self.invcov = np.linalg.inv(clcov)
         
         #compute offsets
         off = tools.compute_offsets( binc.lbin, diag(clcov).reshape(-1,binc.nbins), fid, fsky=fsky)
@@ -148,9 +150,9 @@ class lowlEB(_InstallableLikelihood):
         filepath = os.path.join(self.data_folder,self.clcovfile)
         clcov = self._read_dl_data(filepath)
         if self.rcond != 0.:
-            self.invcov = linalg.pinv(covariance,rcond)
+            self.invcov = np.linalg.pinv(covariance,rcond)
         else:
-            self.invcov = linalg.inv(covariance)
+            self.invcov = np.linalg.inv(covariance)
         
         #compute offsets
         off = tools.compute_offsets( binc.lbin, diag(clcov).reshape(-1,binc.nbins), fid, fsky=fsky)
