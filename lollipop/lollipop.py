@@ -20,7 +20,7 @@ from lollipop import tools
 class lowlB(_InstallableLikelihood):
     """
     Low-L Likelihood for Polarized Planck for BB
-    Spectra-based likelihood based on Hamimeche&Lewis for cross-spectra
+    Spectra-based likelihood based on Hamimeche-Lewis for cross-spectra
     applied on CMB component separated map
     """
     
@@ -31,8 +31,7 @@ class lowlB(_InstallableLikelihood):
         if (not getattr(self, "path", None)) and (not getattr(self, _packages_path, None)):
             raise LoggedError(
                 self.log,
-                "No path given to Lollipop data. Set the likelihood property "
-                "'path' or the common property '%s'.",
+                "No path given to Lollipop data. Set the likelihood property 'path' or the common property '%s'.",
                 _packages_path,
             )
         
@@ -40,7 +39,7 @@ class lowlB(_InstallableLikelihood):
         data_file_path = os.path.normpath(
             getattr(self, "path", None) or os.path.join(self.packages_path, "data")
         )
-
+        
         self.data_folder = os.path.join(data_file_path, self.data_folder)
         if not os.path.exists(self.data_folder):
             raise LoggedError(
@@ -50,7 +49,7 @@ class lowlB(_InstallableLikelihood):
             )
 
 #        self._fsky = fsky
-        fsky = 0.5
+        fsky = 0.52
         
         #Binning (fixed binning)
         binc = tools.get_binning()
@@ -98,7 +97,7 @@ class lowlB(_InstallableLikelihood):
 class lowlEB(_InstallableLikelihood):
     """
     Low-L Likelihood for Polarized Planck for EE+BB+EB
-    Spectra-based likelihood based on Hamimeche&Lewis for cross-spectra
+    Spectra-based likelihood based on Hamimeche-Lewis for cross-spectra
     applied on CMB component separated map
     """
 
@@ -109,8 +108,7 @@ class lowlEB(_InstallableLikelihood):
         if (not getattr(self, "path", None)) and (not getattr(self, _packages_path, None)):
             raise LoggedError(
                 self.log,
-                "No path given to Lollipop data. Set the likelihood property "
-                "'path' or the common property '%s'.",
+                "No path given to Lollipop data. Set the likelihood property 'path' or the common property '%s'.",
                 _packages_path,
             )
 
@@ -183,7 +181,7 @@ class lowlEB(_InstallableLikelihood):
             L = dot( V, dot( diag(1./sqrt(w)), V.transpose()))
             P = dot( L.transpose(), dot( D, L))
             
-            #apply H&L transformation
+            #apply HL transformation
             w,V = eigh(P)
             g = sign(w)*tools.ghl( abs(w))
             G = dot( V, dot(diag(g), V.transpose()))
