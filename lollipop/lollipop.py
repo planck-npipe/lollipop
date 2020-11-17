@@ -47,7 +47,7 @@ class lowlB(_InstallableLikelihood):
                 "The 'data_folder' directory does not exist. Check the given path [%s].",
                 self.data_folder,
             )
-
+        
 #        self._fsky = fsky
         fsky = 0.52
         
@@ -71,16 +71,16 @@ class lowlB(_InstallableLikelihood):
         filepath = os.path.join(self.data_folder,self.clcovfile)
         clcov = fits.getdata(filepath)
         cbcov = tools.bin_covB( clcov, self.binc)
-        self.invcov = np.linalg.inv(cbcov)
         
         #compute offsets
         self.log.debug("Compute offsets")
-        cloff = tools.compute_offsets( self.binc.lbin, np.diag(cbcov), clfid[2], fsky=fsky)
+        cloff = tools.compute_offsets( self.binc.lbin, np.diag(cbcov), clfid[1], fsky=fsky)
         
         #construct BB likelihood
-        self.data = cldata[2]
-        self.off  = cloff[2]
-        self.fid  = clfid[2]
+        self.invcov = np.linalg.inv(cbcov)
+        self.data = cldata[1]
+        self.off  = cloff
+        self.fid  = clfid[1]
         
     def _compute_likelihood( self, cl):
         from numpy import dot, sign, sqrt
@@ -93,15 +93,18 @@ class lowlB(_InstallableLikelihood):
         chi2 = dot( X.transpose(),dot(self.invcov, X))
         
         return( chi2)
-
+    
     def get_requirements(self):
         return dict(Cl={mode: self.binc.lmax for mode in ["bb"]})
-
+    
     def logp(self, **params_values):
         cl = self.theory.get_Cl(ell_factor=False)
         return self.loglike(cl, **params_values)
-
+    
     def loglike(self, cl, **params_values):
+        '''
+        Cl in muK^2 ?
+        '''
         model = self.binc.bin_spectra( cl["bb"])
         return self._compute_likelihood(model)
 
@@ -147,19 +150,19 @@ class lowlEB(_InstallableLikelihood):
         #Binning (fixed binning)
         self.binc = tools.get_binning()
         
-        #Data
+        #Data (ell,ee,bb,eb)
         self.log.debug("Reading cross-spectrum")
         filepath = os.path.join(self.data_folder,self.clfile)
         data = tools.read_dl(filepath)
         cldata = self.binc.bin_spectra( data)
         
-        #Fiducial spectrum
+        #Fiducial spectrum (ell,ee,bb,eb)
         self.log.debug("Reading model")
         filepath = os.path.join(self.data_folder,self.fiducialfile)
         data = tools.read_dl(filepath)
         clfid = self.binc.bin_spectra( data)
         
-        #covmat
+        #covmat (ee,bb,eb)
         self.log.debug("Reading covariance")
         filepath = os.path.join(self.data_folder,self.clcovfile)
         clcov = fits.getdata(filepath)
@@ -172,10 +175,9 @@ class lowlEB(_InstallableLikelihood):
         #compute offsets
         self.log.debug("Compute offsets")
         cloff = tools.compute_offsets( self.binc.lbin, np.diag(cbcov).reshape(-1,self.binc.nbins), clfid, fsky=fsky)
-        cloff[3:] = 0. #force NO offsets for TE,TB, EB
+        cloff[2:] = 0. #force NO offsets EB
         
         #construct likelihood
-        self.isEB = True
         self.data = cldata
         self.off = cloff
         self.fid = clfid
@@ -185,7 +187,7 @@ class lowlEB(_InstallableLikelihood):
         from numpy.linalg import eigh
         
         nel = len(self.data[0])
-        ndim = 3 if self.isEB else 2
+        ndim = len(cl)
         
         x = np.zeros( (ndim, nel))
         for l in range(nel):
@@ -221,7 +223,7 @@ class lowlEB(_InstallableLikelihood):
         return( chi2)
 
     def get_requirements(self):
-        return dict(Cl={mode: self.binc.lmax for mode in ["tt", "ee", "bb", "te"]})
+        return dict(Cl={mode: self.binc.lmax for mode in ["ee", "bb", "eb"]})
 
     def logp(self, **params_values):
         cl = self.theory.get_Cl(ell_factor=False)
@@ -229,7 +231,7 @@ class lowlEB(_InstallableLikelihood):
 
     def loglike(self, cl, **params_values):
         clth = []
-        for mode in ["tt", "ee", "bb", "te"]:
+        for mode in ["ee", "bb", "eb"]:
             clth += [cl[mode]]
         model = self.binc.bin_spectra( clth)
         return self._compute_likelihood(model)

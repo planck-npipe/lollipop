@@ -46,18 +46,30 @@ def bin_covB( clcov, binc):
     return( cbcov)
 
 
-def vec2mat( vect, isEB=True):
+def vec2mat( vect):
+    '''
+    shape EE, BB and EB as a matrix
+    input:
+        vect: EE,BB,EB
+    output:
+        matrix: [[EE,EB],[EB,BB]]
+    '''
     mat = np.zeros( (2,2))
-    mat[0,0] = vect[1]
-    mat[1,1] = vect[2]
-    if isEB:
-        if len(vect) > 5:
-            mat[1,0] = mat[0,1] = vect[5]
+    mat[0,0] = vect[0]
+    mat[1,1] = vect[1]
+    if len(vect) == 3:
+        mat[1,0] = mat[0,1] = vect[2]
     return(mat)
 
-def mat2vec( mat, isEB=True):
-    if isEB: vec = [mat[0,0],mat[1,1],mat[0,1]]
-    else: vec = [mat[0,0],mat[1,1]]
+def mat2vec( mat):
+    '''
+    shape polar matrix into polar vect
+    input:
+        matrix: [[EE,EB],[EB,BB]]
+    output:
+        vect: EE,BB,EB
+    '''
+    vec = [mat[0,0],mat[1,1],mat[0,1]]
     return( vec)
 
 
