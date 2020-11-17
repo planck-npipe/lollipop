@@ -173,7 +173,8 @@ class lowlEB(_InstallableLikelihood):
         self.cloff[2:] = 0. #force NO offsets EB        
     
     def get_requirements(self):
-        return dict(Cl={mode: self.bins.lmax for mode in ["ee", "bb", "eb"]})
+        return dict(Cl={mode: self.bins.lmax for mode in ["ee", "bb"]})
+#        return dict(Cl={mode: self.bins.lmax for mode in ["ee", "bb", "eb"]})
     
     def logp(self, **params_values):
         cl = self.theory.get_Cl(ell_factor=False)
@@ -189,12 +190,12 @@ class lowlEB(_InstallableLikelihood):
 
         #get model in Cl, muK^2
         clth = []
-        for mode in ["ee", "bb", "eb"]:
+#        for mode in ["ee", "bb", "eb"]:
+        for mode in ["ee", "bb"]:
             clth.append(self.bins.bin_spectra( cl[mode]))
         clth = np.array(clth)
         
-        nel = len(self.cldata[0])
-        ndim = len(clth)
+        ndim,nel = np.shape(self.cldata)
         
         x = np.zeros( (ndim, nel))
         for l in range(nel):
