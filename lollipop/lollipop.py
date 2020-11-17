@@ -228,5 +228,5 @@ class lowlEB(_InstallableLikelihood):
         x = x.flatten()
         chi2 = dot( x, dot( self.invcov, x))
         
-        return( chi2)
+        return( -0.5*chi2)
 
