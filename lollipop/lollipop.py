@@ -58,55 +58,51 @@ class lowlB(_InstallableLikelihood):
         self.log.debug("Reading cross-spectrum")
         filepath = os.path.join(self.data_folder,self.clfile)
         data = tools.read_dl(filepath)
-        cldata = self.binc.bin_spectra(data)
+        self.cldata = self.binc.bin_spectra(data[1])
         
         #Fiducial spectrum
         self.log.debug("Reading model")
         filepath = os.path.join(self.data_folder,self.fiducialfile)
         data = tools.read_dl(filepath)
-        clfid = self.binc.bin_spectra(data)
+        self.clfid = self.binc.bin_spectra(data[1])
         
         #covmat
         self.log.debug("Reading covariance")
         filepath = os.path.join(self.data_folder,self.clcovfile)
         clcov = fits.getdata(filepath)
         cbcov = tools.bin_covB( clcov, self.binc)
+        clvar = np.diag(cbcov)
+        self.invclcov = np.linalg.inv(cbcov)
         
         #compute offsets
         self.log.debug("Compute offsets")
-        cloff = tools.compute_offsets( self.binc.lbin, np.diag(cbcov), clfid[1], fsky=fsky)
-        
-        #construct BB likelihood
-        self.invcov = np.linalg.inv(cbcov)
-        self.data = cldata[1]
-        self.off  = cloff
-        self.fid  = clfid[1]
-        
-    def _compute_likelihood( self, cl):
-        from numpy import dot, sign, sqrt
-        
-        x = (self.data+self.off)/(cl+self.off)
-        g = sign(x)*tools.ghl( abs(x))
-        
-        X = (sqrt(self.fid+self.off)) * g * (sqrt(self.fid+self.off))
-        
-        chi2 = dot( X.transpose(),dot(self.invcov, X))
-        
-        return( chi2)
-    
+        self.cloff = tools.compute_offsets( self.binc.lbin, clvar, self.clfid, fsky=fsky)        
+            
     def get_requirements(self):
         return dict(Cl={mode: self.binc.lmax for mode in ["bb"]})
     
     def logp(self, **params_values):
-        cl = self.theory.get_Cl(ell_factor=False)
+        cl = self.theory.get_Cl(ell_factor=False) #Cl in muK^2
         return self.loglike(cl, **params_values)
     
     def loglike(self, cl, **params_values):
         '''
-        Cl in muK^2 ?
+        Compute offset-Hamimeche&Lewis likelihood
+        Input: Cl in muK^2
         '''
-        model = self.binc.bin_spectra( cl["bb"])
-        return self._compute_likelihood(model)
+        from numpy import dot, sign, sqrt
+        
+        #model in Cl, muK^2
+        clth = self.binc.bin_spectra( cl["bb"])
+        
+        x = (self.cldata+self.cloff)/(clth+self.cloff)
+        g = sign(x)*tools.ghl( abs(x))
+        
+        X = (sqrt(self.clfid+self.cloff)) * g * (sqrt(self.clfid+self.cloff))
+        
+        chi2 = dot( X.transpose(),dot(self.invclcov, X))
+        
+        return( chi2)
 
 
 
@@ -143,8 +139,7 @@ class lowlEB(_InstallableLikelihood):
                 self.data_folder,
             )
 
-#        self._fsky = fsky
-        fsky = 0.5
+        fsky = 0.52
         rcond=1e-9
         
         #Binning (fixed binning)
@@ -154,19 +149,20 @@ class lowlEB(_InstallableLikelihood):
         self.log.debug("Reading cross-spectrum")
         filepath = os.path.join(self.data_folder,self.clfile)
         data = tools.read_dl(filepath)
-        cldata = self.binc.bin_spectra( data)
+        self.cldata = self.binc.bin_spectra( data)
         
         #Fiducial spectrum (ell,ee,bb,eb)
         self.log.debug("Reading model")
         filepath = os.path.join(self.data_folder,self.fiducialfile)
         data = tools.read_dl(filepath)
-        clfid = self.binc.bin_spectra( data)
+        self.clfid = self.binc.bin_spectra( data)
         
         #covmat (ee,bb,eb)
         self.log.debug("Reading covariance")
         filepath = os.path.join(self.data_folder,self.clcovfile)
         clcov = fits.getdata(filepath)
         cbcov = tools.bin_covEB( clcov, self.binc)
+        clvar = np.diag(cbcov).reshape(-1,self.binc.nbins)
         if rcond != 0.:
             self.invcov = np.linalg.pinv(cbcov,rcond)
         else:
@@ -174,27 +170,39 @@ class lowlEB(_InstallableLikelihood):
         
         #compute offsets
         self.log.debug("Compute offsets")
-        cloff = tools.compute_offsets( self.binc.lbin, np.diag(cbcov).reshape(-1,self.binc.nbins), clfid, fsky=fsky)
-        cloff[2:] = 0. #force NO offsets EB
-        
-        #construct likelihood
-        self.data = cldata
-        self.off = cloff
-        self.fid = clfid
-        
-    def _compute_likelihood( self, cl):
+        self.cloff = tools.compute_offsets( self.binc.lbin, clvar, self.clfid, fsky=fsky)
+        self.cloff[2:] = 0. #force NO offsets EB        
+
+    def get_requirements(self):
+        return dict(Cl={mode: self.binc.lmax for mode in ["ee", "bb", "eb"]})
+    
+    def logp(self, **params_values):
+        cl = self.theory.get_Cl(ell_factor=False)
+        return self.loglike(cl, **params_values)
+    
+    def loglike(self, cl, **params_values):
+        '''
+        Compute offset-Hamimeche&Lewis likelihood
+        Input: Cl in muK^2
+        '''
         from numpy import dot, diag, sqrt, sign
         from numpy.linalg import eigh
+
+        #get model in Cl, muK^2
+        clth = []
+        for mode in ["ee", "bb", "eb"]:
+            clth.append(self.binc.bin_spectra( cl[mode]))
+        clth = np.array(clth)
         
-        nel = len(self.data[0])
-        ndim = len(cl)
+        nel = len(self.cldata[0])
+        ndim = len(clth)
         
         x = np.zeros( (ndim, nel))
         for l in range(nel):
-            O = tools.vec2mat(  self.off[:,l])
-            D = tools.vec2mat( self.data[:,l]) + O
-            M = tools.vec2mat(        cl[:,l]) + O
-            F = tools.vec2mat(  self.fid[:,l]) + O
+            O = tools.vec2mat(  self.cloff[:,l])
+            D = tools.vec2mat( self.cldata[:,l]) + O
+            M = tools.vec2mat(        clth[:,l]) + O
+            F = tools.vec2mat(  self.clfid[:,l]) + O
             
             #compute P = C_model^{-1/2}.C_data.C_model^{-1/2}
             w,V = eigh(M)
@@ -221,18 +229,4 @@ class lowlEB(_InstallableLikelihood):
         chi2 = dot( x, dot( self.invcov, x))
         
         return( chi2)
-
-    def get_requirements(self):
-        return dict(Cl={mode: self.binc.lmax for mode in ["ee", "bb", "eb"]})
-
-    def logp(self, **params_values):
-        cl = self.theory.get_Cl(ell_factor=False)
-        return self.loglike(cl, **params_values)
-
-    def loglike(self, cl, **params_values):
-        clth = []
-        for mode in ["ee", "bb", "eb"]:
-            clth += [cl[mode]]
-        model = self.binc.bin_spectra( clth)
-        return self._compute_likelihood(model)
 

@@ -72,7 +72,7 @@ class Bins(object):
         
         return p, q
 
-    def bin_spectra(self, spectra, Dl=False):
+    def bin_spectra(self, spectra):
         """
         Average spectra in bins specified by lmin, lmax and delta_ell,
         weighted by `l(l+1)/2pi`.
@@ -80,13 +80,9 @@ class Bins(object):
         """
         spectra = np.asarray(spectra)
         minlmax = min([spectra.shape[-1] - 1,self.lmax])
-#        if Dl:
-#            fact_binned = 1.
-#        else:
-#            fact_binned = 2 * np.pi / (self.lbin * (self.lbin + 1))
         
         _p, _q = self._bin_operators()
-        return np.dot(spectra[..., :minlmax+1], _p.T[:minlmax+1,...]) #* fact_binned
+        return np.dot(spectra[..., :minlmax+1], _p.T[:minlmax+1,...])
 
     def bin_covariance( self, clcov):
         p,q = self._bin_operators(cov=True)
