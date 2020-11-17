@@ -48,38 +48,37 @@ class lowlB(_InstallableLikelihood):
                 self.data_folder,
             )
         
-#        self._fsky = fsky
         fsky = 0.52
         
         #Binning (fixed binning)
-        self.binc = tools.get_binning()
+        self.bins = tools.get_binning()
         
         #Data
         self.log.debug("Reading cross-spectrum")
         filepath = os.path.join(self.data_folder,self.clfile)
         data = tools.read_dl(filepath)
-        self.cldata = self.binc.bin_spectra(data[1])
+        self.cldata = self.bins.bin_spectra(data[1])
         
         #Fiducial spectrum
         self.log.debug("Reading model")
         filepath = os.path.join(self.data_folder,self.fiducialfile)
         data = tools.read_dl(filepath)
-        self.clfid = self.binc.bin_spectra(data[1])
+        self.clfid = self.bins.bin_spectra(data[1])
         
         #covmat
         self.log.debug("Reading covariance")
         filepath = os.path.join(self.data_folder,self.clcovfile)
         clcov = fits.getdata(filepath)
-        cbcov = tools.bin_covB( clcov, self.binc)
+        cbcov = tools.bin_covB( clcov, self.bins)
         clvar = np.diag(cbcov)
         self.invclcov = np.linalg.inv(cbcov)
         
         #compute offsets
         self.log.debug("Compute offsets")
-        self.cloff = tools.compute_offsets( self.binc.lbin, clvar, self.clfid, fsky=fsky)        
-            
+        self.cloff = tools.compute_offsets( self.bins.lbin, clvar, self.clfid, fsky=fsky)        
+    
     def get_requirements(self):
-        return dict(Cl={mode: self.binc.lmax for mode in ["bb"]})
+        return dict(Cl={mode: self.bins.lmax for mode in ["bb"]})
     
     def logp(self, **params_values):
         cl = self.theory.get_Cl(ell_factor=False) #Cl in muK^2
@@ -93,7 +92,7 @@ class lowlB(_InstallableLikelihood):
         from numpy import dot, sign, sqrt
         
         #model in Cl, muK^2
-        clth = self.binc.bin_spectra( cl["bb"])
+        clth = self.bins.bin_spectra( cl["bb"])
         
         x = (self.cldata+self.cloff)/(clth+self.cloff)
         g = sign(x)*tools.ghl( abs(x))
@@ -143,26 +142,26 @@ class lowlEB(_InstallableLikelihood):
         rcond=1e-9
         
         #Binning (fixed binning)
-        self.binc = tools.get_binning()
+        self.bins = tools.get_binning()
         
         #Data (ell,ee,bb,eb)
         self.log.debug("Reading cross-spectrum")
         filepath = os.path.join(self.data_folder,self.clfile)
         data = tools.read_dl(filepath)
-        self.cldata = self.binc.bin_spectra( data)
+        self.cldata = self.bins.bin_spectra( data)
         
         #Fiducial spectrum (ell,ee,bb,eb)
         self.log.debug("Reading model")
         filepath = os.path.join(self.data_folder,self.fiducialfile)
         data = tools.read_dl(filepath)
-        self.clfid = self.binc.bin_spectra( data)
+        self.clfid = self.bins.bin_spectra( data)
         
         #covmat (ee,bb,eb)
         self.log.debug("Reading covariance")
         filepath = os.path.join(self.data_folder,self.clcovfile)
         clcov = fits.getdata(filepath)
-        cbcov = tools.bin_covEB( clcov, self.binc)
-        clvar = np.diag(cbcov).reshape(-1,self.binc.nbins)
+        cbcov = tools.bin_covEB( clcov, self.bins)
+        clvar = np.diag(cbcov).reshape(-1,self.bins.nbins)
         if rcond != 0.:
             self.invcov = np.linalg.pinv(cbcov,rcond)
         else:
@@ -170,11 +169,11 @@ class lowlEB(_InstallableLikelihood):
         
         #compute offsets
         self.log.debug("Compute offsets")
-        self.cloff = tools.compute_offsets( self.binc.lbin, clvar, self.clfid, fsky=fsky)
+        self.cloff = tools.compute_offsets( self.bins.lbin, clvar, self.clfid, fsky=fsky)
         self.cloff[2:] = 0. #force NO offsets EB        
-
+    
     def get_requirements(self):
-        return dict(Cl={mode: self.binc.lmax for mode in ["ee", "bb", "eb"]})
+        return dict(Cl={mode: self.bins.lmax for mode in ["ee", "bb", "eb"]})
     
     def logp(self, **params_values):
         cl = self.theory.get_Cl(ell_factor=False)
@@ -191,7 +190,7 @@ class lowlEB(_InstallableLikelihood):
         #get model in Cl, muK^2
         clth = []
         for mode in ["ee", "bb", "eb"]:
-            clth.append(self.binc.bin_spectra( cl[mode]))
+            clth.append(self.bins.bin_spectra( cl[mode]))
         clth = np.array(clth)
         
         nel = len(self.cldata[0])
