@@ -10,13 +10,42 @@ It is interfaced with the ``cobaya`` MCMC sampler.
 Requirements
 ------------
 * Python >= 3.5
-* `healpy`
 * `numpy`
-* `scipy`
 * `astropy`
 
 Install
 -------
+
+You first need to clone this repository to some location
+
+```shell
+$ git clone https://gitlab.in2p3.fr/tristram/lollipop.git /where/to/clone
+```
+
+Then you can install the `Lollipop` likelihoods and its dependencies *via*
+
+```shell
+$ pip install -e /where/to/clone
+```
+
+The ``-e`` option allow the developer to make changes within the `Hillipop` directory without having
+to reinstall at every changes. If you plan to just use the likelihood and do not develop it, you can
+remove the ``-e`` option.
+
+Installing Hillipop likelihood data
+-----------------------------------
+
+You should use the `cobaya-install` binary to automatically download the data needed by the
+`lollipop.lowlB` or `lollipop.lowlEB` likelihoods
+
+```shell
+$ cobaya-install /where/to/clone/examples/test_lollipop.yaml -p /where/to/put/packages
+```
+
+Data and code such as [CAMB](https://github.com/cmbant/CAMB) will be downloaded and installed within
+the ``/where/to/put/packages`` directory. For more details, you can have a look to `cobaya`
+[documentation](https://cobaya.readthedocs.io/en/latest/installation_cosmo.html).
+
 
 Likelihood versions
 -------------------
