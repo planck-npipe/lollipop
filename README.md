@@ -2,6 +2,7 @@ LoLLiPoP: Low-L Likelihood Polarized for Planck
 ================================================
 
 ``Lollipop`` is a Planck low-l polarization likelihood based on cross-power-spectra for which the bias is zero when the noise is uncorrelated between maps. It uses the approximation presented in Hamimeche & Lewis (2008), modified as described in Mangilli et al. (2015) to apply to cross-power spectra.
+This version is based on the Planck PR4 data. Cross-spectra are computed on the CMB maps from Commander component separation applied on each detset-split Planck frequency maps.
 
 It was previously applied and described in 
 - [Planck Collaboration Int. XLVII (2016)](https://arxiv.org/abs/1605.03507) for investigating the reionization history,
