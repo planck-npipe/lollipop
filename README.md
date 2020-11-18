@@ -5,10 +5,7 @@ LoLLiPoP: Low-L Likelihood Polarized for Planck
 
 It was previously applied to Planck EE data for investigating the reionization history in [Planck Collaboration Int. XLVII (2016)](https://arxiv.org/abs/1605.03507) and in [Tristram et al. (2020)](https://arxiv.org/abs/2010.01139) for estimating constraints on the tensor-to-scalar ratio.
 
-Three likelihoods are available:
-- lowlE
-- lowlB
-- lowlEB
+Three likelihoods are available: ``lowlE``, ``lowlB``, ``lowlEB``.
 
 It is interfaced with the ``cobaya`` MCMC sampler.
 
@@ -33,15 +30,15 @@ Then you can install the `Lollipop` likelihoods and its dependencies *via*
 $ pip install -e /where/to/clone
 ```
 
-The ``-e`` option allow the developer to make changes within the `Hillipop` directory without having
+The ``-e`` option allow the developer to make changes within the `Lollipop` directory without having
 to reinstall at every changes. If you plan to just use the likelihood and do not develop it, you can
 remove the ``-e`` option.
 
-Installing Hillipop likelihood data
+Installing Lollipop likelihood data
 -----------------------------------
 
 You should use the `cobaya-install` binary to automatically download the data needed by the
-`lollipop.lowlB` or `lollipop.lowlEB` likelihoods
+`lollipop.lowlE` or `lollipop.lowlB` or `lollipop.lowlEB` likelihoods
 
 ```shell
 $ cobaya-install /where/to/clone/examples/test_lollipop.yaml -p /where/to/put/packages
