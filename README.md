@@ -5,6 +5,11 @@ LoLLiPoP: Low-L Likelihood Polarized for Planck
 
 It was previously applied to Planck EE data for investigating the reionization history in [Planck Collaboration Int. XLVII (2016)](https://arxiv.org/abs/1605.03507) and in [Tristram et al. (2020)](https://arxiv.org/abs/2010.01139) for estimating constraints on the tensor-to-scalar ratio.
 
+Three likelihoods are available:
+- lowlE
+- lowlB
+- lowlEB
+
 It is interfaced with the ``cobaya`` MCMC sampler.
 
 Requirements
