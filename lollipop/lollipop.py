@@ -17,103 +17,16 @@ from lollipop.bins import Bins
 from lollipop import tools
 
 
-class lowlB(_InstallableLikelihood):
-    """
-    Low-L Likelihood for Polarized Planck for BB
-    Spectra-based likelihood based on Hamimeche-Lewis for cross-spectra
-    applied on CMB component separated map
-    """
-    
-    def initialize( self):
-        self.log.info("Initialising.")
-        
-        # Set path to data
-        if (not getattr(self, "path", None)) and (not getattr(self, _packages_path, None)):
-            raise LoggedError(
-                self.log,
-                "No path given to Lollipop data. Set the likelihood property 'path' or the common property '%s'.",
-                _packages_path,
-            )
-        
-        # If no path specified, use the modules path
-        data_file_path = os.path.normpath(
-            getattr(self, "path", None) or os.path.join(self.packages_path, "data")
-        )
-        
-        self.data_folder = os.path.join(data_file_path)
-        if not os.path.exists(self.data_folder):
-            raise LoggedError(
-                self.log,
-                "The 'data_folder' directory does not exist. Check the given path [%s].",
-                self.data_folder,
-            )
-        
-        fsky = 0.52
-        
-        #Binning (fixed binning)
-        self.bins = tools.get_binning()
-        
-        #Data
-        self.log.debug("Reading cross-spectrum")
-        filepath = os.path.join(self.data_folder,self.clfile)
-        data = tools.read_dl(filepath)
-        self.cldata = self.bins.bin_spectra(data[1])
-        
-        #Fiducial spectrum
-        self.log.debug("Reading model")
-        filepath = os.path.join(self.data_folder,self.fiducialfile)
-        data = tools.read_dl(filepath)
-        self.clfid = self.bins.bin_spectra(data[1])
-        
-        #covmat
-        self.log.debug("Reading covariance")
-        filepath = os.path.join(self.data_folder,self.clcovfile)
-        clcov = fits.getdata(filepath)
-        cbcov = tools.bin_covB( clcov, self.bins)
-        clvar = np.diag(cbcov)
-        self.invclcov = np.linalg.inv(cbcov)
-        
-        #compute offsets
-        self.log.debug("Compute offsets")
-        self.cloff = tools.compute_offsets( self.bins.lbin, clvar, self.clfid, fsky=fsky)        
-    
-    def get_requirements(self):
-        return dict(Cl={mode: self.bins.lmax for mode in ["bb"]})
-    
-    def logp(self, **params_values):
-        cl = self.theory.get_Cl(ell_factor=False) #Cl in muK^2
-        return self.loglike(cl, **params_values)
-    
-    def loglike(self, cl, **params_values):
-        '''
-        Compute offset-Hamimeche&Lewis likelihood
-        Input: Cl in muK^2
-        '''
-        from numpy import dot, sign, sqrt
-        
-        #model in Cl, muK^2
-        clth = self.bins.bin_spectra( cl["bb"])
-        
-        x = (self.cldata+self.cloff)/(clth+self.cloff)
-        g = sign(x)*tools.ghl( abs(x))
-        
-        X = (sqrt(self.clfid+self.cloff)) * g * (sqrt(self.clfid+self.cloff))
-        
-        chi2 = dot( X.transpose(),dot(self.invclcov, X))
-        
-        return( chi2)
 
-
-
-
-
-class lowlEB(_InstallableLikelihood):
+class _lollipop_likelihood(_InstallableLikelihood):
     """
     Low-L Likelihood for Polarized Planck for EE+BB+EB
     Spectra-based likelihood based on Hamimeche-Lewis for cross-spectra
     applied on CMB component separated map
     """
 
+    _mode = "EEBBEB"
+
     def initialize( self):
         self.log.info("Initialising.")
 
@@ -139,7 +52,9 @@ class lowlEB(_InstallableLikelihood):
             )
 
         fsky = 0.52
-        rcond=1e-9
+        rcond = 0.
+        if self._mode == "EEBBEB":
+            rcond=1e-9
         
         #Binning (fixed binning)
         self.bins = tools.get_binning()
@@ -160,34 +75,31 @@ class lowlEB(_InstallableLikelihood):
         self.log.debug("Reading covariance")
         filepath = os.path.join(self.data_folder,self.clcovfile)
         clcov = fits.getdata(filepath)
-        cbcov = tools.bin_covEB( clcov, self.bins)
+        if self._mode == "EEBBEB":
+            cbcov = tools.bin_covEB( clcov, self.bins)
+        elif self._mode == "EE":
+            cbcov = tools.bin_covEE( clcov, self.bins)
+        elif self._mode == "BB":
+            cbcov = tools.bin_covBB( clcov, self.bins)
         clvar = np.diag(cbcov).reshape(-1,self.bins.nbins)
         if rcond != 0.:
-            self.invcov = np.linalg.pinv(cbcov,rcond)
+            self.invclcov = np.linalg.pinv(cbcov,rcond)
         else:
-            self.invcov = np.linalg.inv(cbcov)
+            self.invclcov = np.linalg.inv(cbcov)
         
         #compute offsets
         self.log.debug("Compute offsets")
         self.cloff = tools.compute_offsets( self.bins.lbin, clvar, self.clfid, fsky=fsky)
-        self.cloff[2:] = 0. #force NO offsets EB        
+        self.cloff[2:] = 0. #force NO offsets EB
     
-    def get_requirements(self):
-        return dict(Cl={mode: self.bins.lmax for mode in ["ee", "bb"]})
-#        return dict(Cl={mode: self.bins.lmax for mode in ["ee", "bb", "eb"]})
-    
-    def logp(self, **params_values):
-        cl = self.theory.get_Cl(ell_factor=False)
-        return self.loglike(cl, **params_values)
-    
-    def loglike(self, cl, **params_values):
+    def _compute_chi2_2fields(self, cl, **params_values):
         '''
         Compute offset-Hamimeche&Lewis likelihood
         Input: Cl in muK^2
         '''
         from numpy import dot, diag, sqrt, sign
         from numpy.linalg import eigh
-
+        
         #get model in Cl, muK^2
         clth = []
 #        for mode in ["ee", "bb", "eb"]:
@@ -226,7 +138,77 @@ class lowlEB(_InstallableLikelihood):
 
         #compute chi2
         x = x.flatten()
-        chi2 = dot( x, dot( self.invcov, x))
+        chi2 = dot( x, dot( self.invclcov, x))
+        
+        return chi2
+
+    def _compute_chi2_1field(self, cl, **params_values):
+        '''
+        Compute offset-Hamimeche&Lewis likelihood
+        Input: Cl in muK^2
+        '''
+        from numpy import dot, sign, sqrt
+        
+        #model in Cl, muK^2
+        if self._mode == "EE":
+            clth = self.bins.bin_spectra( cl["ee"])
+            m = 0
+        elif self._mode == "BB":
+            clth = self.bins.bin_spectra( cl["bb"])
+            m = 1
+        
+        x = (self.cldata[m]+self.cloff[m])/(clth+self.cloff[m])
+        g = sign(x)*tools.ghl( abs(x))
+        
+        X = (sqrt(self.clfid[m]+self.cloff[m])) * g * (sqrt(self.clfid[m]+self.cloff[m]))
+        
+        chi2 = dot( X.transpose(),dot(self.invclcov, X))
+        
+        return chi2
+
+    def get_requirements(self):
+        return dict(Cl={mode: self.bins.lmax for mode in ["ee", "bb"]})
+    
+    def logp(self, **params_values):
+        cl = self.theory.get_Cl(ell_factor=False)
+        return self.loglike(cl, **params_values)
+
+    def loglike(self, cl, **params_values):
+
+        if self._mode == "EEBBEB":
+            chi2 = self._compute_chi2_2fields(cl, **params_values)
+        elif self._mode == "EE":
+            chi2 = self._compute_chi2_1field(cl, **params_values)
+        elif self._mode == "BB":
+            chi2 = self._compute_chi2_1field(cl, **params_values)
         
         return( -0.5*chi2)
 
+
+
+
+class lowlEB(_lollipop_likelihood):
+    """
+    Low-L Likelihood for Polarized Planck for EE+BB+EB
+    Spectra-based likelihood based on Hamimeche-Lewis for cross-spectra
+    applied on CMB component separated map
+    """
+    _mode = "EEBBEB"
+
+
+class lowlE(_lollipop_likelihood):
+    """
+    Low-L Likelihood for Polarized Planck for EE+BB+EB
+    Spectra-based likelihood based on Hamimeche-Lewis for cross-spectra
+    applied on CMB component separated map
+    """
+    _mode = "EE"
+
+
+class lowlB(_lollipop_likelihood):
+    """
+    Low-L Likelihood for Polarized Planck for EE+BB+EB
+    Spectra-based likelihood based on Hamimeche-Lewis for cross-spectra
+    applied on CMB component separated map
+    """
+    _mode = "BB"

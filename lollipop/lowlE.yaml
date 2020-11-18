@@ -1,0 +1,3 @@
+clfile: Lollipop/cl_lolEB_NPIPE.dat
+fiducialfile: Lollipop/fiducial_lolEB_ffp10_tensor_lensedCls.dat
+clcovfile: Lollipop/clcov_lolEB_NPIPE.fits

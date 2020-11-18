@@ -37,9 +37,17 @@ def bin_covEB( clcov, binc):
             cbcov[t1*binc.nbins:(t1+1)*binc.nbins,t2*binc.nbins:(t2+1)*binc.nbins] = binc.bin_covariance( mymat)
     return( cbcov)
 
-def bin_covB( clcov, binc):
+def bin_covBB( clcov, binc):
     nell = len(clcov)//3
     t1 = t2 = 1
+    mymat = np.zeros( (binc.lmax+1,binc.lmax+1))
+    mymat[2:,2:] = clcov[t1*nell:t1*nell+(binc.lmax-1),t2*nell:t2*nell+(binc.lmax-1)]
+    cbcov = binc.bin_covariance( mymat)
+    return( cbcov)
+
+def bin_covEE( clcov, binc):
+    nell = len(clcov)//3
+    t1 = t2 = 0
     mymat = np.zeros( (binc.lmax+1,binc.lmax+1))
     mymat[2:,2:] = clcov[t1*nell:t1*nell+(binc.lmax-1),t2*nell:t2*nell+(binc.lmax-1)]
     cbcov = binc.bin_covariance( mymat)
