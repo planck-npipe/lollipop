@@ -33,8 +33,8 @@ class Bins(object):
         for l1, l2 in zip(self.lmins, self.lmaxs):
             if l1 > l2:
                 raise ValueError("Incoherent inputs")
-        self.lmin = min(self.lmins)
-        self.lmax = max(self.lmaxs)
+        self.lmin = np.min(self.lmins)
+        self.lmax = np.max(self.lmaxs)
         if self.lmin < 1:
             raise ValueError("Input lmin is less than 1.")
         if self.lmax < self.lmin:
@@ -79,7 +79,7 @@ class Bins(object):
         Return Cb
         """
         spectra = np.asarray(spectra)
-        minlmax = min([spectra.shape[-1] - 1, self.lmax])
+        minlmax = np.min([spectra.shape[-1] - 1, self.lmax])
 
         _p, _q = self._bin_operators()
         return np.dot(spectra[..., : minlmax + 1], _p.T[: minlmax + 1, ...])
