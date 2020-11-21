@@ -21,7 +21,6 @@ data_url = "https://portal.nersc.gov/project/cmb/planck2020/likelihoods"
 class _LollipopLikelihood(_InstallableLikelihood):
 
     install_options = {"download_url": "{}/planck_2020_lollipop.tar.gz".format(data_url)}
-    _mode = "EEBBEB"
 
     def initialize(self):
 
@@ -46,8 +45,20 @@ class _LollipopLikelihood(_InstallableLikelihood):
                 self.data_folder,
             )
 
+        # Setting mode given likelihood name
+        likelihood_name = self.__class__.__name__
+        self.mode = likelihood_name
+        self.log.debug("mode = {}".format(self.mode))
+        if self.mode not in ["lowlE", "lowlB", "lowlEB"]:
+            raise LoggedError(
+                self.log,
+                "The '{} likelihood is not currently supported. Check your likelihood name.",
+                self.mode,
+            )
+
         # Binning (fixed binning)
         self.bins = tools.get_binning()
+        self.log.debug("lmax = {}".format(self.bins.lmax))
 
         # Data (ell,ee,bb,eb)
         self.log.debug("Reading cross-spectrum")
@@ -65,14 +76,14 @@ class _LollipopLikelihood(_InstallableLikelihood):
         self.log.debug("Reading covariance")
         filepath = os.path.join(self.data_folder, self.cl_cov_file)
         clcov = fits.getdata(filepath)
-        if self._mode == "EEBBEB":
+        if self.mode == "lowlEB":
             cbcov = tools.bin_covEB(clcov, self.bins)
-        elif self._mode == "EE":
+        elif self.mode == "lowlE":
             cbcov = tools.bin_covEE(clcov, self.bins)
-        elif self._mode == "BB":
+        elif self.mode == "lowlB":
             cbcov = tools.bin_covBB(clcov, self.bins)
         clvar = np.diag(cbcov).reshape(-1, self.bins.nbins)
-        if self._mode == "EEBBEB":
+        if self.mode == "lowlEB":
             rcond = getattr(self, "rcond", 1e-9)
             self.invclcov = np.linalg.pinv(cbcov, rcond)
         else:
@@ -91,11 +102,10 @@ class _LollipopLikelihood(_InstallableLikelihood):
         Compute offset-Hamimeche&Lewis likelihood
         Input: Cl in muK^2
         """
-        from numpy import diag, dot, sign, sqrt
-        from numpy.linalg import eigh
-
         # get model in Cl, muK^2
-        clth = np.array([self.bins.bin_spectra(cl[mode]) for mode in ["ee", "bb"]])
+        clth = np.array(
+            [self.bins.bin_spectra(cl[mode]) for mode in ["ee", "bb", "eb"] if mode in cl]
+        )
 
         nell = self.cldata.shape[1]
         x = np.zeros(self.cldata.shape)
@@ -106,28 +116,28 @@ class _LollipopLikelihood(_InstallableLikelihood):
             F = tools.vec2mat(self.clfid[:, ell]) + O
 
             # compute P = C_model^{-1/2}.C_data.C_model^{-1/2}
-            w, V = eigh(M)
+            w, V = np.linalg.eigh(M)
             #            if prod( sign(w)) <= 0:
             #                print( "WARNING: negative eigenvalue for l=%d" %l)
-            L = dot(V, dot(diag(1.0 / sqrt(w)), V.transpose()))
-            P = dot(L.transpose(), dot(D, L))
+            L = V @ np.diag(1.0 / np.sqrt(w)) @ V.transpose()
+            P = L.transpose() @ D @ L
 
             # apply HL transformation
-            w, V = eigh(P)
-            g = sign(w) * tools.ghl(abs(w))
-            G = dot(V, dot(diag(g), V.transpose()))
+            w, V = np.linalg.eigh(P)
+            g = np.sign(w) * tools.ghl(np.abs(w))
+            G = V @ np.diag(g) @ V.transpose()
 
             # cholesky fiducial
-            w, V = eigh(F)
-            L = dot(V, dot(diag(sqrt(w)), V.transpose()))
+            w, V = np.linalg.eigh(F)
+            L = V @ np.diag(np.sqrt(w)) @ V.transpose()
 
             # compute C_fid^1/2 * G * C_fid^1/2
-            X = dot(L.transpose(), dot(G, L))
+            X = L.transpose() @ G @ L
             x[:, ell] = tools.mat2vec(X)
 
         # compute chi2
         x = x.flatten()
-        chi2 = dot(x, dot(self.invclcov, x))
+        chi2 = x @ self.invclcov @ x
 
         return chi2
 
@@ -136,18 +146,16 @@ class _LollipopLikelihood(_InstallableLikelihood):
         Compute offset-Hamimeche&Lewis likelihood
         Input: Cl in muK^2
         """
-        from numpy import abs, dot, sign, sqrt
-
         # model in Cl, muK^2
-        m = 0 if self._mode == "EE" else 1
-        clth = self.bins.bin_spectra(cl[self._mode.lower()])
+        m = 0 if self.mode == "lowlE" else 1
+        clth = self.bins.bin_spectra(cl["ee" if self.mode == "lowlE" else "bb"])
 
         x = (self.cldata[m] + self.cloff[m]) / (clth + self.cloff[m])
-        g = sign(x) * tools.ghl(abs(x))
+        g = np.sign(x) * tools.ghl(np.abs(x))
 
-        X = (sqrt(self.clfid[m] + self.cloff[m])) * g * (sqrt(self.clfid[m] + self.cloff[m]))
+        X = (np.sqrt(self.clfid[m] + self.cloff[m])) * g * (np.sqrt(self.clfid[m] + self.cloff[m]))
 
-        chi2 = dot(X.transpose(), dot(self.invclcov, X))
+        chi2 = X @ self.invclcov @ X
 
         return chi2
 
@@ -160,11 +168,11 @@ class _LollipopLikelihood(_InstallableLikelihood):
 
     def loglike(self, cl, **params_values):
 
-        if self._mode == "EEBBEB":
+        if self.mode == "lowlEB":
             chi2 = self._compute_chi2_2fields(cl, **params_values)
-        elif self._mode == "EE":
+        elif self.mode == "lowlE":
             chi2 = self._compute_chi2_1field(cl, **params_values)
-        elif self._mode == "BB":
+        elif self.mode == "lowlB":
             chi2 = self._compute_chi2_1field(cl, **params_values)
 
         return -0.5 * chi2
@@ -181,8 +189,6 @@ class lowlEB(_LollipopLikelihood):
     applied on CMB component separated map
     """
 
-    _mode = "EEBBEB"
-
 
 class lowlE(_LollipopLikelihood):
     """
@@ -191,8 +197,6 @@ class lowlE(_LollipopLikelihood):
     applied on CMB component separated map
     """
 
-    _mode = "EE"
-
 
 class lowlB(_LollipopLikelihood):
     """
@@ -200,5 +204,3 @@ class lowlB(_LollipopLikelihood):
     Spectra-based likelihood based on Hamimeche-Lewis for cross-spectra
     applied on CMB component separated map
     """
-
-    _mode = "BB"
