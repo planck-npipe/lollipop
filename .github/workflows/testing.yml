@@ -32,4 +32,4 @@ jobs:
     - name: Unit tests
       run: |
         pip install camb
-        python -m unittest lollipop.tests.test_lollipop
+        python -m unittest planck_2020_lollipop.tests.test_lollipop
