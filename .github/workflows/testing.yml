@@ -1,0 +1,35 @@
+name: Testing
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: [3.6, 3.7, 3.8]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Brew packages
+      if: matrix.os == 'macos-latest'
+      run: |
+        brew install gcc
+
+    - name: Install dependencies via pip
+      run: |
+        python -m pip install --upgrade pip
+        pip install .
+
+    - name: Unit tests
+      run: |
+        pip install camb
+        python -m unittest lollipop.tests.test_lollipop
