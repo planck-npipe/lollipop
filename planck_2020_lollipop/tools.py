@@ -1,7 +1,7 @@
 import numpy as np
 from numpy import linalg
 
-from lollipop.bins import Bins
+from .bins import Bins
 
 
 def compute_offsets(ell, varcl, clref, fsky=1.0, iter=10):

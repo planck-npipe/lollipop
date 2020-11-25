@@ -24,14 +24,14 @@ class LollipopTest(unittest.TestCase):
         from cobaya.install import install
 
         install(
-            {"likelihood": {"lollipop.lowlB": None}},
+            {"likelihood": {"planck_2020_lollipop.lowlB": None}},
             path=packages_path,
             skip_global=True,
         )
 
     def test_lollipop(self):
         import camb
-        import lollipop
+        import planck_2020_lollipop
 
         camb_cosmo = cosmo_params.copy()
         camb_cosmo.update({"lmax": 145, "lens_potential_accuracy": 1})
@@ -41,7 +41,7 @@ class LollipopTest(unittest.TestCase):
         cl_dict = {k: powers["total"][:, v] for k, v in {"ee": 1, "bb": 2}.items()}
 
         for mode, chi2 in chi2s.items():
-            _llp = getattr(lollipop, mode)
+            _llp = getattr(planck_2020_lollipop, mode)
             my_lik = _llp({"packages_path": packages_path})
             loglike = my_lik.loglike(cl_dict, **{})
             self.assertAlmostEqual(-2 * loglike, chi2, 0)
@@ -50,7 +50,7 @@ class LollipopTest(unittest.TestCase):
         for mode, chi2 in chi2s.items():
             info = {
                 "debug": True,
-                "likelihood": {"lollipop.{}".format(mode): None},
+                "likelihood": {"planck_2020_lollipop.{}".format(mode): None},
                 "theory": {"camb": {"extra_args": {"lens_potential_accuracy": 1}}},
                 "params": cosmo_params,
                 "modules": packages_path,
