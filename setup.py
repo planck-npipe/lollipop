@@ -1,8 +1,11 @@
 from setuptools import find_packages, setup
 
+import versioneer
+
 setup(
     name="planck_2020_lollipop",
-    version="0.1",
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
     description="A cobaya low-ell likelihood polarized for planck",
     zip_safe=True,
     packages=find_packages(),
