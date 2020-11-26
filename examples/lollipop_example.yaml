@@ -2,8 +2,8 @@ debug: True
 
 likelihood:
   planck_2018_lowl.TT: null
-  lollipop.lowlB: null
-  lollipop.lowlEB: null
+  planck_2020_lollipop.lowlB: null
+  planck_2020_lollipop.lowlEB: null
 
 params:
   # Sampled

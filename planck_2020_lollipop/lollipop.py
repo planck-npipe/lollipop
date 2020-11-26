@@ -12,8 +12,8 @@ from cobaya.likelihoods._base_classes import _InstallableLikelihood
 from cobaya.log import LoggedError
 from cobaya.tools import are_different_params_lists
 
-from lollipop import tools
-from lollipop.bins import Bins
+from . import tools
+from .bins import Bins
 
 data_url = "https://portal.nersc.gov/project/cmb/planck2020/likelihoods"
 
