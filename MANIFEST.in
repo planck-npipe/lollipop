@@ -1,0 +1,2 @@
+include versioneer.py
+include planck_2020_lollipop/_version.py
