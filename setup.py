@@ -17,7 +17,7 @@ setup(
     license="GNU license",
     classifiers=[
         "Intended Audience :: Developers",
-        "License :: OSI Approved :: GNU License",
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Natural Language :: English",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
