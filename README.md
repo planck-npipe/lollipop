@@ -3,14 +3,20 @@ LoLLiPoP: Low-L Likelihood Polarized for Planck
 
 ![GitHub Workflow
 Status](https://img.shields.io/github/workflow/status/planck-npipe/lollipop/Unit%20test)
-![PyPI](https://img.shields.io/pypi/v/planck-2020-lollipop)
+![https://pypi.python.org/pypi/planck-2020-lollipop](https://img.shields.io/pypi/v/planck-2020-lollipop)
 
-``Lollipop`` is a Planck low-l polarization likelihood based on cross-power-spectra for which the bias is zero when the noise is uncorrelated between maps. It uses the approximation presented in [Hamimeche & Lewis (2008)](https://arxiv.org/abs/0801.0554), modified as described in [Mangilli et al. (2015)](https://arxiv.org/abs/1503.01347) to apply to cross-power spectra.
-This version is based on the Planck PR4 data. Cross-spectra are computed on the CMB maps from Commander component separation applied on each detset-split Planck frequency maps.
+``Lollipop`` is a Planck low-l polarization likelihood based on cross-power-spectra for which the
+bias is zero when the noise is uncorrelated between maps. It uses the approximation presented in
+[Hamimeche & Lewis (2008)](https://arxiv.org/abs/0801.0554), modified as described in [Mangilli et
+al. (2015)](https://arxiv.org/abs/1503.01347) to apply to cross-power spectra.  This version is
+based on the Planck PR4 data. Cross-spectra are computed on the CMB maps from Commander component
+separation applied on each detset-split Planck frequency maps.
 
-It was previously applied and described in 
-- [Planck Collaboration Int. XLVII (2016)](https://arxiv.org/abs/1605.03507) for investigating the reionization history,
-- [Tristram et al. (2020)](https://arxiv.org/abs/2010.01139) for estimating constraints on the tensor-to-scalar ratio.
+It was previously applied and described in
+- [Planck Collaboration Int. XLVII (2016)](https://arxiv.org/abs/1605.03507) for investigating the
+  reionization history,
+- [Tristram et al. (2020)](https://arxiv.org/abs/2010.01139) for estimating constraints on the
+  tensor-to-scalar ratio.
 
 It is interfaced with the ``cobaya`` MCMC sampler.
 
