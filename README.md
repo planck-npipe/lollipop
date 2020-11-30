@@ -29,7 +29,13 @@ Requirements
 Install
 -------
 
-You first need to clone this repository to some location
+The easiest way to install the `Lollipop` likelihood is *via* `pip`
+
+```shell
+$ pip install planck-2020-lollipop [--user]
+```
+
+If you plan to dig into the code, it is better to clone this repository to some location
 
 ```shell
 $ git clone https://gitlab.in2p3.fr/tristram/lollipop.git /where/to/clone
