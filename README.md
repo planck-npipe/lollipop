@@ -1,6 +1,10 @@
 LoLLiPoP: Low-L Likelihood Polarized for Planck
 ================================================
 
+![GitHub Workflow
+Status](https://img.shields.io/github/workflow/status/planck-npipe/lollipop/Unit%20test)
+![PyPI](https://img.shields.io/pypi/v/planck-2020-lollipop)
+
 ``Lollipop`` is a Planck low-l polarization likelihood based on cross-power-spectra for which the bias is zero when the noise is uncorrelated between maps. It uses the approximation presented in [Hamimeche & Lewis (2008)](https://arxiv.org/abs/0801.0554), modified as described in [Mangilli et al. (2015)](https://arxiv.org/abs/1503.01347) to apply to cross-power spectra.
 This version is based on the Planck PR4 data. Cross-spectra are computed on the CMB maps from Commander component separation applied on each detset-split Planck frequency maps.
 
