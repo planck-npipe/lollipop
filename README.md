@@ -1,9 +1,9 @@
 LoLLiPoP: Low-L Likelihood Polarized for Planck
 ================================================
 
-![GitHub Workflow
-Status](https://img.shields.io/github/workflow/status/planck-npipe/lollipop/Unit%20test)
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/planck-npipe/lollipop/Unit%20test)
 ![https://pypi.python.org/pypi/planck-2020-lollipop](https://img.shields.io/pypi/v/planck-2020-lollipop)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 ``Lollipop`` is a Planck low-l polarization likelihood based on cross-power-spectra for which the
 bias is zero when the noise is uncorrelated between maps. It uses the approximation presented in
