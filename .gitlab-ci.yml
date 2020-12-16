@@ -4,7 +4,7 @@ stages:
 .test:
   before_script:
     - apt-get update -qy
-    - apt-get install -y python-dev python-pip gfortran
+    - apt-get install -y python-dev python-pip gfortran-8
     - gfortran --version
     - python --version
     - pip install camb
