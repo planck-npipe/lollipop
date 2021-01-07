@@ -181,6 +181,18 @@ class _LollipopLikelihood(_InstallableLikelihood):
     def get_path(cls, path):
         return os.path.realpath(os.path.join(path, "data"))
 
+    @classmethod
+    def is_installed(cls, **kwargs):
+        if kwargs.get("data", True):
+            path = kwargs["path"]
+            if not (
+                cls.get_install_options() and os.path.exists(path) and len(os.listdir(path)) > 0
+            ):
+                return False
+            if not os.path.exists(os.path.join(path, "planck_2020/lollipop")):
+                return False
+        return True
+
 
 class lowlEB(_LollipopLikelihood):
     """
