@@ -38,7 +38,7 @@ $ pip install planck-2020-lollipop [--user]
 If you plan to dig into the code, it is better to clone this repository to some location
 
 ```shell
-$ git clone https://gitlab.in2p3.fr/tristram/lollipop.git /where/to/clone
+$ git clone https://github.com/planck-npipe/lollipop.git /where/to/clone
 ```
 
 Then you can install the `Lollipop` likelihoods and its dependencies *via*
