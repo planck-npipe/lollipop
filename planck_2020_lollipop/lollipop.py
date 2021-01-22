@@ -139,6 +139,7 @@ class _LollipopLikelihood(_InstallableLikelihood):
         x = x.flatten()
         chi2 = x @ self.invclcov @ x
 
+        self.log.debug("chi2/ndof = {}/{}".format(chi2, len(x)))
         return chi2
 
     def _compute_chi2_1field(self, cl, **params_values):
@@ -157,6 +158,7 @@ class _LollipopLikelihood(_InstallableLikelihood):
 
         chi2 = X @ self.invclcov @ X
 
+        self.log.debug("chi2/ndof = {}/{}".format(chi2, len(X)))
         return chi2
 
     def get_requirements(self):
