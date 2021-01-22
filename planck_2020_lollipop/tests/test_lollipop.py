@@ -44,8 +44,8 @@ class LollipopTest(unittest.TestCase):
             _llp = getattr(planck_2020_lollipop, mode)
             my_lik = _llp({"packages_path": packages_path})
             loglike = my_lik.loglike(cl_dict, **{})
-            self.assertAlmostEqual(-2 * loglike, chi2, 0)
-
+            self.assertLess( abs(-2 * loglike - chi2), 1)
+            
     def test_cobaya(self):
         for mode, chi2 in chi2s.items():
             info = {
@@ -58,4 +58,4 @@ class LollipopTest(unittest.TestCase):
             from cobaya.model import get_model
 
             model = get_model(info)
-            self.assertAlmostEqual(-2 * model.loglikes({})[0][0], chi2, 0)
+            self.assertLess( abs(-2 * model.loglikes({})[0][0] - chi2), 1)
