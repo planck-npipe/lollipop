@@ -15,7 +15,7 @@ from cobaya.tools import are_different_params_lists
 from . import tools
 from .bins import Bins
 
-data_url = "https://portal.nersc.gov/project/cmb/planck2020/likelihoods"
+data_url = "https://portal.nersc.gov/cfs/cmb/planck2020/likelihoods"
 
 
 class _LollipopLikelihood(_InstallableLikelihood):
