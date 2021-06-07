@@ -24,11 +24,11 @@ class _LollipopLikelihood(InstallableLikelihood):
     def initialize(self):
 
         # Set path to data
-        if (not getattr(self, "path", None)) and (not getattr(self, packages_path, None)):
+        if (not getattr(self, "path", None)) and (not getattr(self, "packages_path", None)):
             raise LoggedError(
                 self.log,
                 "No path given to Lollipop data. Set the likelihood property 'path' or the common property '%s'.",
-                packages_path,
+                "packages_path",
             )
 
         # If no path specified, use the modules path
