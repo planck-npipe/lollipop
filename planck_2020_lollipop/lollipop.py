@@ -21,6 +21,10 @@ class _LollipopLikelihood(InstallableLikelihood):
 
     install_options = {"download_url": "{}/planck_2020_lollipop.tar.gz".format(data_url)}
 
+    marginalised_over_covariance: Optional[bool] = False
+    hartlap_factor: Optional[bool] = False
+    Nsim: Optional[int] = 0
+
     def initialize(self):
 
         # Set path to data
@@ -127,8 +131,8 @@ class _LollipopLikelihood(InstallableLikelihood):
 
             # compute P = C_model^{-1/2}.C_data.C_model^{-1/2}
             w, V = np.linalg.eigh(M)
-            #            if prod( sign(w)) <= 0:
-            #                print( "WARNING: negative eigenvalue for l=%d" %l)
+#            if np.prod( np.sign(w)) <= 0:
+#                print( "WARNING: negative eigenvalue for l=%d" %ell)
             L = V @ np.diag(1.0 / np.sqrt(w)) @ V.transpose()
             P = L.transpose() @ D @ L
 
