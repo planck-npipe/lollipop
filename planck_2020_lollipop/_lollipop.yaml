@@ -3,3 +3,7 @@ data_folder: planck_2020/lollipop
 cl_file: cl_lolEB_NPIPE.dat
 fiducial_file: fiducial_lolEB_planck2018_tensor_lensedCls.dat
 cl_cov_file: clcov_lolEB_NPIPE.fits
+
+hartlap_factor: false
+marginalised_over_covariance: true
+Nsim: 400

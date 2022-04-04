@@ -82,11 +82,22 @@ class _LollipopLikelihood(InstallableLikelihood):
         elif self.mode == "lowlB":
             cbcov = tools.bin_covBB(clcov, self.bins)
         clvar = np.diag(cbcov).reshape(-1, self.bins.nbins)
+        
         if self.mode == "lowlEB":
             rcond = getattr(self, "rcond", 1e-9)
             self.invclcov = np.linalg.pinv(cbcov, rcond)
         else:
             self.invclcov = np.linalg.inv(cbcov)
+
+        #Hartlap et al. 2008
+        if self.hartlap_factor:
+            if self.Nsim != 0:
+                self.invclcov *= (self.Nsim - len(cbcov) - 2) / (self.Nsim - 1)
+
+        if self.marginalised_over_covariance:
+            if Nsim <= 1:
+                raise LoggedError( self.log,
+                                   "Need the number of MC simulations used to compute the covariance in order to marginalise over.")
 
         # compute offsets
         self.log.debug("Compute offsets")
@@ -136,8 +147,11 @@ class _LollipopLikelihood(InstallableLikelihood):
 
         # compute chi2
         x = x.flatten()
-        chi2 = x @ self.invclcov @ x
-
+        if self.marginalised_over_covariance:
+            chi2 = self.Nsim*np.log( 1 + (x @ self.invclcov @ x) / (self.Nsim-1) )
+        else:
+            chi2 = x @ self.invclcov @ x
+        
         self.log.debug("chi2/ndof = {}/{}".format(chi2, len(x)))
         return chi2
 
@@ -155,7 +169,11 @@ class _LollipopLikelihood(InstallableLikelihood):
 
         X = (np.sqrt(self.clfid[m] + self.cloff[m])) * g * (np.sqrt(self.clfid[m] + self.cloff[m]))
 
-        chi2 = X @ self.invclcov @ X
+        if self.marginalised_over_covariance:
+            #marginalised over S = Ceff
+            chi2 = self.Nsim*np.log( 1 + (X @ self.invclcov @ X) / (self.Nsim-1) )
+        else:
+            chi2 = X @ self.invclcov @ X
 
         self.log.debug("chi2/ndof = {}/{}".format(chi2, len(X)))
         return chi2
@@ -217,3 +235,5 @@ class lowlB(_LollipopLikelihood):
     Spectra-based likelihood based on Hamimeche-Lewis for cross-spectra
     applied on CMB component separated map
     """
+
+
