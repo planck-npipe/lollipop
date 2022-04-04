@@ -95,7 +95,7 @@ class _LollipopLikelihood(InstallableLikelihood):
                 self.invclcov *= (self.Nsim - len(cbcov) - 2) / (self.Nsim - 1)
 
         if self.marginalised_over_covariance:
-            if Nsim <= 1:
+            if self.Nsim <= 1:
                 raise LoggedError( self.log,
                                    "Need the number of MC simulations used to compute the covariance in order to marginalise over.")
 
