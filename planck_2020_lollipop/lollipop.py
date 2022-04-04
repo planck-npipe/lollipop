@@ -97,7 +97,7 @@ class _LollipopLikelihood(InstallableLikelihood):
         if self.marginalised_over_covariance:
             if self.Nsim <= 1:
                 raise LoggedError( self.log,
-                                   "Need the number of MC simulations used to compute the covariance in order to marginalise over.")
+                                   "Need the number of MC simulations used to compute the covariance in order to marginalise over (Nsim>1).")
 
         # compute offsets
         self.log.debug("Compute offsets")

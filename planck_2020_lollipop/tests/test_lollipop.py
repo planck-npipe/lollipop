@@ -16,7 +16,7 @@ cosmo_params = {
     "tau": 0.0544,
 }
 
-chi2s = {"lowlB": 65.5, "lowlE": 46.1, "lowlEB": 212.9}
+chi2s = {"lowlB": 60.78, "lowlE": 43.70, "lowlEB": 171.06}
 
 
 class LollipopTest(unittest.TestCase):
