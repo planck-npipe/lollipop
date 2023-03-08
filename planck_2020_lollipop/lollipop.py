@@ -7,6 +7,7 @@ from typing import Optional
 
 import astropy.io.fits as fits
 import numpy as np
+from cobaya.conventions import data_path, packages_path_input
 from cobaya.likelihoods.base_classes import InstallableLikelihood
 from cobaya.log import LoggedError
 from cobaya.tools import are_different_params_lists
@@ -22,11 +23,12 @@ class _LollipopLikelihood(InstallableLikelihood):
 
     def initialize(self):
         # Set path to data
-        if (not getattr(self, "path", None)) and (not getattr(self, "packages_path", None)):
+        # Set path to data
+        if (not getattr(self, "path", None)) and (not getattr(self, packages_path_input, None)):
             raise LoggedError(
                 self.log,
-                "No path given to Lollipop data. Set the likelihood property 'path' or the common property '%s'.",
-                "packages_path",
+                "No path given to Lollipop data. Set the likelihood property "
+                f"'path' or the common property '{packages_path_input}'.",
             )
 
         # If no path specified, use the modules path
@@ -195,7 +197,9 @@ class _LollipopLikelihood(InstallableLikelihood):
 
     @classmethod
     def get_path(cls, path):
-        return os.path.realpath(os.path.join(path, "data"))
+        if path.rstrip(os.sep).endswith(data_path):
+            return path
+        return os.path.realpath(os.path.join(path, data_path))
 
     @classmethod
     def is_installed(cls, **kwargs):
