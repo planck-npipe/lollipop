@@ -31,19 +31,19 @@ Install
 The easiest way to install the `Lollipop` likelihood is *via* `pip`
 
 ```shell
-$ pip install planck-2020-lollipop [--user]
+pip install planck-2020-lollipop [--user]
 ```
 
 If you plan to dig into the code, it is better to clone this repository to some location
 
 ```shell
-$ git clone https://github.com/planck-npipe/lollipop.git /where/to/clone
+git clone https://github.com/planck-npipe/lollipop.git /where/to/clone
 ```
 
 Then you can install the `Lollipop` likelihoods and its dependencies *via*
 
 ```shell
-$ pip install -e /where/to/clone
+pip install -e /where/to/clone
 ```
 
 The ``-e`` option allow the developer to make changes within the `Lollipop` directory without having
@@ -57,7 +57,7 @@ You should use the `cobaya-install` binary to automatically download the data ne
 `lollipop.lowlE` or `lollipop.lowlB` or `lollipop.lowlEB` likelihoods
 
 ```shell
-$ cobaya-install /where/to/clone/examples/test_lollipop.yaml -p /where/to/put/packages
+cobaya-install /where/to/clone/examples/test_lollipop.yaml -p /where/to/put/packages
 ```
 
 Data and code such as [CAMB](https://github.com/cmbant/CAMB) will be downloaded and installed within
