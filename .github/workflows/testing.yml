@@ -9,7 +9,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
-        python-version: [3.8, 3.9] #[3.6, 3.7, 3.8]
+        python-version: ["3.8", "3.9", "3.10"]
 
     steps:
     - uses: actions/checkout@v2
@@ -23,7 +23,7 @@ jobs:
       if: matrix.os == 'macos-latest'
       run: |
         set -x
-        sudo ln -s /usr/local/bin/gfortran-10 /usr/local/bin/gfortran
+        sudo ln -s /usr/local/bin/gfortran-11 /usr/local/bin/gfortran
         gfortran --version
 
     - name: Install dependencies via pip
