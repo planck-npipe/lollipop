@@ -1,6 +1,6 @@
 LoLLiPoP: Low-L Likelihood Polarized for Planck
 ================================================
-[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/planck-npipe/lollipop/Unit%20test)](https://github.com/planck-npipe/lollipop/actions/workflows/testing.yml)
+[![GitHub Workflow Status]( https://img.shields.io/github/actions/workflow/status/planck-npipe/lollipop/testing.yml?branch=master)](https://github.com/planck-npipe/lollipop/actions/workflows/testing.yml)
 [![pypi](https://img.shields.io/pypi/v/planck-2020-lollipop)](https://pypi.python.org/pypi/planck-2020-lollipop)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
