@@ -23,7 +23,6 @@ class _LollipopLikelihood(InstallableLikelihood):
 
     def initialize(self):
         # Set path to data
-        # Set path to data
         if (not getattr(self, "path", None)) and (not getattr(self, packages_path_input, None)):
             raise LoggedError(
                 self.log,
@@ -33,7 +32,7 @@ class _LollipopLikelihood(InstallableLikelihood):
 
         # If no path specified, use the modules path
         data_file_path = os.path.normpath(
-            getattr(self, "path", None) or os.path.join(self.packages_path, "data")
+            getattr(self, "path", None) or os.path.join(self.packages_path, data_path)
         )
 
         self.data_folder = os.path.join(data_file_path, self.data_folder)
