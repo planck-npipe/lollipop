@@ -7,6 +7,7 @@ from typing import Optional
 
 import astropy.io.fits as fits
 import numpy as np
+from cobaya.conventions import data_path, packages_path_input
 from cobaya.likelihoods.base_classes import InstallableLikelihood
 from cobaya.log import LoggedError
 from cobaya.tools import are_different_params_lists
@@ -18,22 +19,20 @@ data_url = "https://portal.nersc.gov/cfs/cmb/planck2020/likelihoods"
 
 
 class _LollipopLikelihood(InstallableLikelihood):
-
-    install_options = {"download_url": "{}/planck_2020_lollipop.tar.gz".format(data_url)}
+    install_options = {"download_url": f"{data_url}/planck_2020_lollipop.tar.gz"}
 
     def initialize(self):
-
         # Set path to data
-        if (not getattr(self, "path", None)) and (not getattr(self, "packages_path", None)):
+        if (not getattr(self, "path", None)) and (not getattr(self, packages_path_input, None)):
             raise LoggedError(
                 self.log,
-                "No path given to Lollipop data. Set the likelihood property 'path' or the common property '%s'.",
-                "packages_path",
+                "No path given to Lollipop data. Set the likelihood property "
+                f"'path' or the common property '{packages_path_input}'.",
             )
 
         # If no path specified, use the modules path
         data_file_path = os.path.normpath(
-            getattr(self, "path", None) or os.path.join(self.packages_path, "data")
+            getattr(self, "path", None) or os.path.join(self.packages_path, data_path)
         )
 
         self.data_folder = os.path.join(data_file_path, self.data_folder)
@@ -47,7 +46,7 @@ class _LollipopLikelihood(InstallableLikelihood):
         # Setting mode given likelihood name
         likelihood_name = self.__class__.__name__
         self.mode = likelihood_name
-        self.log.debug("mode = {}".format(self.mode))
+        self.log.debug(f"mode = {self.mode}")
         if self.mode not in ["lowlE", "lowlB", "lowlEB"]:
             raise LoggedError(
                 self.log,
@@ -57,7 +56,7 @@ class _LollipopLikelihood(InstallableLikelihood):
 
         # Binning (fixed binning)
         self.bins = tools.get_binning()
-        self.log.debug("lmax = {}".format(self.bins.lmax))
+        self.log.debug(f"lmax = {self.bins.lmax}")
 
         # Data (ell,ee,bb,eb)
         self.log.debug("Reading cross-spectrum")
@@ -82,22 +81,24 @@ class _LollipopLikelihood(InstallableLikelihood):
         elif self.mode == "lowlB":
             cbcov = tools.bin_covBB(clcov, self.bins)
         clvar = np.diag(cbcov).reshape(-1, self.bins.nbins)
-        
+
         if self.mode == "lowlEB":
             rcond = getattr(self, "rcond", 1e-9)
             self.invclcov = np.linalg.pinv(cbcov, rcond)
         else:
             self.invclcov = np.linalg.inv(cbcov)
 
-        #Hartlap et al. 2008
+        # Hartlap et al. 2008
         if self.hartlap_factor:
             if self.Nsim != 0:
                 self.invclcov *= (self.Nsim - len(cbcov) - 2) / (self.Nsim - 1)
 
         if self.marginalised_over_covariance:
             if self.Nsim <= 1:
-                raise LoggedError( self.log,
-                                   "Need the number of MC simulations used to compute the covariance in order to marginalise over (Nsim>1).")
+                raise LoggedError(
+                    self.log,
+                    "Need the number of MC simulations used to compute the covariance in order to marginalise over (Nsim>1).",
+                )
 
         # compute offsets
         self.log.debug("Compute offsets")
@@ -148,11 +149,11 @@ class _LollipopLikelihood(InstallableLikelihood):
         # compute chi2
         x = x.flatten()
         if self.marginalised_over_covariance:
-            chi2 = self.Nsim*np.log( 1 + (x @ self.invclcov @ x) / (self.Nsim-1) )
+            chi2 = self.Nsim * np.log(1 + (x @ self.invclcov @ x) / (self.Nsim - 1))
         else:
             chi2 = x @ self.invclcov @ x
-        
-        self.log.debug("chi2/ndof = {}/{}".format(chi2, len(x)))
+
+        self.log.debug(f"chi2/ndof = {chi2}/{len(x)}")
         return chi2
 
     def _compute_chi2_1field(self, cl, **params_values):
@@ -170,12 +171,12 @@ class _LollipopLikelihood(InstallableLikelihood):
         X = (np.sqrt(self.clfid[m] + self.cloff[m])) * g * (np.sqrt(self.clfid[m] + self.cloff[m]))
 
         if self.marginalised_over_covariance:
-            #marginalised over S = Ceff
-            chi2 = self.Nsim*np.log( 1 + (X @ self.invclcov @ X) / (self.Nsim-1) )
+            # marginalised over S = Ceff
+            chi2 = self.Nsim * np.log(1 + (X @ self.invclcov @ X) / (self.Nsim - 1))
         else:
             chi2 = X @ self.invclcov @ X
 
-        self.log.debug("chi2/ndof = {}/{}".format(chi2, len(X)))
+        self.log.debug(f"chi2/ndof = {chi2}/{len(X)}")
         return chi2
 
     def get_requirements(self):
@@ -186,24 +187,23 @@ class _LollipopLikelihood(InstallableLikelihood):
         return self.loglike(cl, **params_values)
 
     def loglike(self, cl, **params_values):
-
         if self.mode == "lowlEB":
             chi2 = self._compute_chi2_2fields(cl, **params_values)
-        elif self.mode == "lowlE":
-            chi2 = self._compute_chi2_1field(cl, **params_values)
-        elif self.mode == "lowlB":
+        elif self.mode in ["lowlE", "lowlB"]:
             chi2 = self._compute_chi2_1field(cl, **params_values)
 
         return -0.5 * chi2
 
     @classmethod
     def get_path(cls, path):
-        return os.path.realpath(os.path.join(path, "data"))
+        if path.rstrip(os.sep).endswith(data_path):
+            return path
+        return os.path.realpath(os.path.join(path, data_path))
 
     @classmethod
     def is_installed(cls, **kwargs):
         if kwargs.get("data", True):
-            path = kwargs["path"]
+            path = cls.get_path(kwargs["path"])
             if not (
                 cls.get_install_options() and os.path.exists(path) and len(os.listdir(path)) > 0
             ):
@@ -235,5 +235,3 @@ class lowlB(_LollipopLikelihood):
     Spectra-based likelihood based on Hamimeche-Lewis for cross-spectra
     applied on CMB component separated map
     """
-
-
