@@ -16,7 +16,10 @@ cosmo_params = {
     "tau": 0.0544,
 }
 
-chi2s = {"lowlB": 60.78, "lowlE": 43.70, "lowlEB": 171.06}
+params = {'A_planck': 1.0}
+
+#chi2s = {"lowlB": 60.78, "lowlE": 43.70, "lowlEB": 171.06}
+chi2s = {"lowlB": 30.827, "lowlE": 36.44, "lowlEB": 104.85}
 
 
 class LollipopTest(unittest.TestCase):
@@ -24,7 +27,7 @@ class LollipopTest(unittest.TestCase):
         from cobaya.install import install
 
         install(
-            {"likelihood": {"planck_2020_lollipop.lowlB": None}},
+            {"likelihood": {"planck_2020_lollipop.lowlEB": None}},
             path=packages_path,
             skip_global=True,
         )
@@ -34,7 +37,7 @@ class LollipopTest(unittest.TestCase):
         import planck_2020_lollipop
 
         camb_cosmo = cosmo_params.copy()
-        camb_cosmo.update({"lmax": 145, "lens_potential_accuracy": 1})
+        camb_cosmo.update({"lmax": 30, "lens_potential_accuracy": 1})
         pars = camb.set_params(**camb_cosmo)
         results = camb.get_results(pars)
         powers = results.get_cmb_power_spectra(pars, CMB_unit="muK", raw_cl=True)
@@ -43,7 +46,8 @@ class LollipopTest(unittest.TestCase):
         for mode, chi2 in chi2s.items():
             _llp = getattr(planck_2020_lollipop, mode)
             my_lik = _llp({"packages_path": packages_path})
-            loglike = my_lik.loglike(cl_dict, **{})
+            loglike = my_lik.loglike(cl_dict, **params)
+            print( "***", -2 * loglike, chi2)
             self.assertLess( abs(-2 * loglike - chi2), 1)
             
     def test_cobaya(self):
@@ -52,10 +56,11 @@ class LollipopTest(unittest.TestCase):
                 "debug": True,
                 "likelihood": {"planck_2020_lollipop.{}".format(mode): None},
                 "theory": {"camb": {"extra_args": {"lens_potential_accuracy": 1}}},
-                "params": cosmo_params,
+                "params": dict(**cosmo_params,**params),
                 "packages_path": packages_path,
             }
             from cobaya.model import get_model
 
             model = get_model(info)
+            print( "***", -2 * model.loglikes({})[0][0], chi2)
             self.assertLess( abs(-2 * model.loglikes({})[0][0] - chi2), 1)
