@@ -7,3 +7,19 @@ cl_cov_file: clcov_lolEB_NPIPE.fits
 hartlap_factor: false
 marginalised_over_covariance: true
 Nsim: 400
+lmin: 2
+lmax: 30
+
+params:
+  A_planck:
+    prior:
+      dist: norm
+      loc: 1
+      scale: 0.0025
+    ref:
+      dist: norm
+      loc: 1
+      scale: 0.002
+    proposal: 0.0005
+    latex: y_\mathrm{cal}
+    renames: calPlanck

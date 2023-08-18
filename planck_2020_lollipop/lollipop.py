@@ -55,7 +55,7 @@ class _LollipopLikelihood(InstallableLikelihood):
             )
 
         # Binning (fixed binning)
-        self.bins = tools.get_binning()
+        self.bins = tools.get_binning(self.lmin,self.lmax)
         self.log.debug(f"lmax = {self.bins.lmax}")
 
         # Data (ell,ee,bb,eb)
@@ -118,11 +118,13 @@ class _LollipopLikelihood(InstallableLikelihood):
             [self.bins.bin_spectra(cl[mode]) for mode in ["ee", "bb", "eb"] if mode in cl]
         )
 
+        cal = params_values["A_planck"] ** 2
+
         nell = self.cldata.shape[1]
         x = np.zeros(self.cldata.shape)
         for ell in range(nell):
             O = tools.vec2mat(self.cloff[:, ell])
-            D = tools.vec2mat(self.cldata[:, ell]) + O
+            D = tools.vec2mat(self.cldata[:, ell]*cal) + O
             M = tools.vec2mat(clth[:, ell]) + O
             F = tools.vec2mat(self.clfid[:, ell]) + O
 
@@ -165,7 +167,9 @@ class _LollipopLikelihood(InstallableLikelihood):
         m = 0 if self.mode == "lowlE" else 1
         clth = self.bins.bin_spectra(cl["ee" if self.mode == "lowlE" else "bb"])
 
-        x = (self.cldata[m] + self.cloff[m]) / (clth + self.cloff[m])
+        cal = params_values["A_planck"] ** 2
+
+        x = (self.cldata[m]*cal + self.cloff[m]) / (clth + self.cloff[m])
         g = np.sign(x) * tools.ghl(np.abs(x))
 
         X = (np.sqrt(self.clfid[m] + self.cloff[m])) * g * (np.sqrt(self.clfid[m] + self.cloff[m]))
