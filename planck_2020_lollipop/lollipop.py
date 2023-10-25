@@ -187,7 +187,7 @@ class _LollipopLikelihood(InstallableLikelihood):
         return dict(Cl={mode: self.bins.lmax for mode in ["ee", "bb"]})
 
     def logp(self, **params_values):
-        cl = self.theory.get_Cl(ell_factor=False)
+        cl = self.provider.get_Cl(ell_factor=False)
         return self.loglike(cl, **params_values)
 
     def loglike(self, cl, **params_values):
@@ -219,7 +219,7 @@ class _LollipopLikelihood(InstallableLikelihood):
 
 class lowlEB(_LollipopLikelihood):
     """
-    Low-L Likelihood for Polarized Planck for EE+BB+EB
+    Low-L Likelihood for Polarized Planck EE+BB+EB
     Spectra-based likelihood based on Hamimeche-Lewis for cross-spectra
     applied on CMB component separated map
     """
@@ -227,7 +227,7 @@ class lowlEB(_LollipopLikelihood):
 
 class lowlE(_LollipopLikelihood):
     """
-    Low-L Likelihood for Polarized Planck for EE
+    Low-L Likelihood for Polarized Planck EE
     Spectra-based likelihood based on Hamimeche-Lewis for cross-spectra
     applied on CMB component separated map
     """
@@ -235,7 +235,7 @@ class lowlE(_LollipopLikelihood):
 
 class lowlB(_LollipopLikelihood):
     """
-    Low-L Likelihood for Polarized Planck for BB
+    Low-L Likelihood for Polarized Planck BB
     Spectra-based likelihood based on Hamimeche-Lewis for cross-spectra
     applied on CMB component separated map
     """
