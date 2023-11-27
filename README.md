@@ -14,8 +14,8 @@ separation applied on each detset-split Planck frequency maps.
 It was previously applied and described in
 - [Planck Collaboration Int. XLVII (2016)](https://arxiv.org/abs/1605.03507) for investigating the
   reionization history,
-- [Tristram et al. (2020)](https://arxiv.org/abs/2010.01139) for estimating constraints on the
-  tensor-to-scalar ratio.
+- [Tristram et al. (2021)](https://arxiv.org/abs/2010.01139) Planck constraints on the tensor-to-scalar ratio
+- [Tristram et al. (2022)](https://arxiv.org/abs/2112.07961) Improved limits on the tensor-to-scalar ratio using BICEP and Planck data
 
 It is interfaced with the ``cobaya`` MCMC sampler.
 
