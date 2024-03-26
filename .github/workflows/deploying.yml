@@ -30,7 +30,7 @@ jobs:
         retention-days: 1
 
   upload_pypi:
-    if: github.event_name == 'release' && github.event.action == 'published'
+    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
     needs: [deploy]
     runs-on: ubuntu-latest
     permissions:
