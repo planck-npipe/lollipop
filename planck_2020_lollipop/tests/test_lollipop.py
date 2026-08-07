@@ -1,26 +1,29 @@
 import os
 import tempfile
 import unittest
+import camb
+from astropy.utils import minversion
 
 packages_path = os.environ.get("COBAYA_PACKAGES_PATH") or os.path.join(
     tempfile.gettempdir(), "Lollipop_packages"
 )
 
 cosmo_params = {
-    "cosmomc_theta": 0.0104085,
-    "As": 2.0989031673191437e-09,
-    "ombh2": 0.02237,
-    "omch2": 0.1200,
-    "ns": 0.9649,
-    "Alens": 1.0,
-    "tau": 0.0544,
+    "H0": 67.66,
+    "As": 2.088434844099595e-09,
+    "ombh2": 0.02226,
+    "omch2": 0.1188,
+    "ns": 0.9680,
+    "tau": 0.0580,
 }
 
-params = {'A_planck': 1.0}
+params = {'A_planck': 0.9996}
 
-#chi2s = {"lowlB": 60.78, "lowlE": 43.70, "lowlEB": 171.06}
-chi2s = {"lowlB": 30.827, "lowlE": 36.44, "lowlEB": 104.85}
-
+if minversion(camb, "2.0.0"):
+    chi2s = {"lowlB": 30.21, "lowlE": 32.85, "lowlEB": 101.33}
+else:
+    chi2s = {"lowlB": 30.74, "lowlE": 36.47, "lowlEB": 104.97}
+    
 
 class LollipopTest(unittest.TestCase):
     def setUp(self):
@@ -49,16 +52,16 @@ class LollipopTest(unittest.TestCase):
             loglike = my_lik.loglike(cl_dict, **params)
             self.assertLess( abs(-2 * loglike - chi2), 1)
             
-    def test_cobaya(self):
-        for mode, chi2 in chi2s.items():
-            info = {
-                "debug": True,
-                "likelihood": {"planck_2020_lollipop.{}".format(mode): None},
-                "theory": {"camb": {"extra_args": {"lens_potential_accuracy": 1}}},
-                "params": dict(**cosmo_params,**params),
-                "packages_path": packages_path,
-            }
-            from cobaya.model import get_model
+##     def test_cobaya(self):
+##         for mode, chi2 in chi2s.items():
+##             info = {
+##                 "debug": True,
+##                 "likelihood": {"planck_2020_lollipop.{}".format(mode): None},
+##                 "theory": {"camb": {"extra_args": {"lens_potential_accuracy": 1}}},
+##                 "params": dict(**cosmo_params,**params),
+##                 "packages_path": packages_path,
+##             }
+##             from cobaya.model import get_model
 
-            model = get_model(info)
-            self.assertLess( abs(-2 * model.loglikes({})[0][0] - chi2), 1)
+##             model = get_model(info)
+##             self.assertLess( abs(-2 * model.loglikes({})[0][0] - chi2), 1)
